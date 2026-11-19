@@ -1,9 +1,17 @@
+const EN = document.documentElement.lang === 'en';
+const LOCALE = EN ? 'en-GB' : 'it-IT';
+
 // Menu mobile
 const burger = document.querySelector('.burger'), nav = document.getElementById('nav');
 burger.addEventListener('click', () => { const o = nav.classList.toggle('open'); burger.setAttribute('aria-expanded', o); });
 nav.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => nav.classList.remove('open')));
 
-const eur = (n) => '€ ' + n.toLocaleString('it-IT', { maximumFractionDigits: 2 });
+// Cambio lingua: mantiene parametri e ancora (es. la pagina di conferma con session_id)
+document.querySelectorAll('a.lang').forEach((a) => {
+  if (location.search || location.hash) a.href = a.getAttribute('href') + location.search + location.hash;
+});
+
+const eur = (n) => '€ ' + n.toLocaleString(LOCALE, { maximumFractionDigits: 2 });
 const escHtml = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 // Prezzi delle camere (unica fonte: netlify/lib/config.js)
@@ -19,8 +27,8 @@ if (document.querySelector('[data-price]')) {
 // Recensioni Google vere (se l'API non è configurata resta la sintesi statica)
 const revBox = document.getElementById('reviews');
 if (revBox) {
-  fetch('/api/reviews').then((r) => (r.ok ? r.json() : Promise.reject())).then((g) => {
-    if (g.rating) document.querySelectorAll('[data-g=rating]').forEach((e) => (e.textContent = g.rating.toLocaleString('it-IT', { maximumFractionDigits: 1 })));
+  fetch('/api/reviews' + (EN ? '?lang=en' : '')).then((r) => (r.ok ? r.json() : Promise.reject())).then((g) => {
+    if (g.rating) document.querySelectorAll('[data-g=rating]').forEach((e) => (e.textContent = g.rating.toLocaleString(LOCALE, { maximumFractionDigits: 1 })));
     if (g.count) document.querySelectorAll('[data-g=count]').forEach((e) => (e.textContent = g.count));
     if (g.url) document.getElementById('g-link').href = g.url;
     if (!g.reviews?.length) return;
@@ -30,14 +38,14 @@ if (revBox) {
       const pic = `<span class="ini">${escHtml((r.author || '?')[0])}</span>`;
       return `<article class="review">
         <header>${pic}<div><h3>${who}</h3><time>${escHtml(r.when || '')}</time></div></header>
-        <span class="stars" aria-label="${r.rating} stelle su 5">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+        <span class="stars" aria-label="${r.rating} ${EN ? 'out of 5 stars' : 'stelle su 5'}">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
         <p class="clamp">${escHtml(r.text)}</p>
       </article>`;
     }).join('');
     revBox.querySelectorAll('p.clamp').forEach((p) => {
       if (p.scrollHeight > p.clientHeight + 4) {
         const b = document.createElement('button');
-        b.textContent = 'Leggi tutto';
+        b.textContent = EN ? 'Read more' : 'Leggi tutto';
         b.onclick = () => { p.classList.remove('clamp'); b.remove(); };
         p.after(b);
       }
@@ -52,7 +60,7 @@ document.querySelectorAll('[data-map]').forEach((box) => {
   const KEY = 'map-ok';
   const show = () => {
     const f = document.createElement('iframe');
-    f.title = "Mappa del B&B L'Amicizia";
+    f.title = box.dataset.mapTitle || "B&B L'Amicizia";
     f.loading = 'lazy';
     f.referrerPolicy = 'no-referrer-when-downgrade';
     f.src = box.dataset.map;

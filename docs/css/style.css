@@ -326,7 +326,7 @@ a.polaroid:hover{transform:rotate(0) translateY(-4px)}
 [hidden]{display:none!important}
 
 /* pannello riservato */
-.adm{padding:50px 0 100px}
+.adm{padding-block:50px 100px}
 .adm-login{max-width:420px;margin:40px auto}
 .adm-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
 .adm-tabs button{font:500 16px var(--serif);padding:10px 16px;border:1px solid var(--line);background:var(--card);border-radius:4px;cursor:pointer;color:var(--ink)}
@@ -351,3 +351,9 @@ a.polaroid:hover{transform:rotate(0) translateY(-4px)}
 .map-consent a{text-decoration:underline}
 .map-consent .check{font-size:14px;color:var(--ink-2);background:var(--card);padding:6px 12px;display:flex;gap:8px;align-items:center}
 @media (max-width:560px){.map-consent{height:320px}}
+
+/* selettore lingua */
+.lang{font-size:13px;letter-spacing:.12em;color:var(--ink-2);border:1px dashed var(--line);border-radius:3px;padding:6px 9px;line-height:1}
+.lang:hover{color:var(--terra);border-color:var(--terra)}
+@media (max-width:960px){.lang{margin-left:auto}.burger{margin-left:6px}}
+.brand span{white-space:nowrap}

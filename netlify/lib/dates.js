@@ -28,8 +28,11 @@ export function todayRome(now = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(now);
 }
 
-const MONTHS = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
-export function itDate(s) {
+const MONTHS = {
+  it: ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+};
+export function itDate(s, lang = 'it') {
   const [y, m, d] = s.split('-').map(Number);
-  return `${d} ${MONTHS[m - 1]} ${y}`;
+  return `${d} ${(MONTHS[lang] || MONTHS.it)[m - 1]} ${y}`;
 }

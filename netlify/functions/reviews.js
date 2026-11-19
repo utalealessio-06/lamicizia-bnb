@@ -5,15 +5,16 @@ import { json, fail } from '../lib/http.js';
 
 const TTL = 12 * 3600 * 1000;
 
-export default async () => {
+export default async (req) => {
+  const lang = new URL(req.url).searchParams.get('lang') === 'en' ? 'en' : 'it';
   const key = process.env.GOOGLE_PLACES_API_KEY;
   const place = process.env.GOOGLE_PLACE_ID;
   if (!key || !place) return fail('Recensioni non configurate.', 503);
 
-  const cached = await cacheGet('reviews').catch(() => null);
+  const cached = await cacheGet(`reviews-${lang}`).catch(() => null);
   if (cached && Date.now() - cached.at < TTL) return out(cached.data);
 
-  const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(place)}?languageCode=it`, {
+  const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(place)}?languageCode=${lang}`, {
     headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'rating,userRatingCount,googleMapsUri,reviews' },
   });
   if (!res.ok) {
@@ -37,7 +38,7 @@ export default async () => {
         date: r.publishTime,
       })),
   };
-  await cacheSet('reviews', { at: Date.now(), data }).catch(() => {});
+  await cacheSet(`reviews-${lang}`, { at: Date.now(), data }).catch(() => {});
   return out(data);
 };
 

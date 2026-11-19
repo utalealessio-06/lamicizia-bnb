@@ -44,8 +44,9 @@ test('validazione', () => {
 });
 
 test('prezzi e caparra', () => {
-  assert.deepEqual(quote('verde', 3, 'deposit'), { total: 285, deposit: 86, due: 86, balance: 199 });
-  assert.deepEqual(quote('verde', 3, 'full'), { total: 285, deposit: 86, due: 285, balance: 0 });
+  assert.deepEqual(quote('verde', 3, 'deposit', 2), { total: 246, deposit: 74, due: 74, balance: 172 });
+  assert.deepEqual(quote('verde', 3, 'full', 1), { total: 231, deposit: 69, due: 231, balance: 0 });
+  assert.equal(quote('classica', 2, 'full', 4).total, 244);
 });
 
 test('flusso completo: blocco, pagamento, conferma, annullo', async () => {
@@ -55,7 +56,7 @@ test('flusso completo: blocco, pagamento, conferma, annullo', async () => {
   assert.equal(r1.status, 200);
   const { id: sid } = await r1.json();
   const s = sessions.get(sid);
-  assert.equal(s.amount_total, 8600, 'caparra 30% di 285 €');
+  assert.equal(s.amount_total, 7400, 'caparra 30% di 246 € (3 notti × 82 €)');
   assert.deepEqual(await busy('verde'), nightsOf(IN, OUT), 'notti bloccate durante il pagamento');
 
   // un altro ospite sulle stesse date viene fermato
@@ -66,7 +67,7 @@ test('flusso completo: blocco, pagamento, conferma, annullo', async () => {
   const { id: sid2 } = await r2.json();
   assert.equal(sessions.get(sid).status, 'expired');
   const s2 = sessions.get(sid2);
-  assert.equal(s2.amount_total, 28500);
+  assert.equal(s2.amount_total, 24600);
 
   // webhook con firma sbagliata
   assert.equal((await webhook(post('/api/stripe-webhook', '{}', { 'stripe-signature': 'no' }))).status, 400);
@@ -130,4 +131,29 @@ test('limiti: password del pannello', async () => {
   assert.equal((await admin(post('/api/admin', { action: 'overview' }, { ...h, 'x-admin-password': 'password-lunga' }))).status, 429);
   // da un altro indirizzo si entra
   assert.equal((await admin(post('/api/admin', { action: 'overview' }, { 'x-nf-client-connection-ip': '8.8.8.8', 'x-admin-password': 'password-lunga' }))).status, 200);
+});
+
+test('inglese: messaggi, pagamento e email nella lingua dell\'ospite', async () => {
+  const { guestEmail, ownerEmail } = await import('../lib/email.js');
+  // libera i pagamenti lasciati aperti dai test precedenti (tetto globale)
+  for (const x of sessions.values()) if (x.status === 'open') { x.status = 'expired'; await webhook(event('checkout.session.expired', x)); }
+  assert.match(validateBooking({ ...guest, lang: 'en', email: 'x' }, today).error, /Invalid email/);
+  assert.match(validateBooking({ ...guest, lang: 'en', guests: 4 }, today).error, /Green Room sleeps up to 3/);
+  const r = await checkout(post('/api/checkout', { ...guest, lang: 'en', room: 'viola', checkin: addDays(today, 200), checkout: addDays(today, 202) }, { 'x-nf-client-connection-ip': '5.5.5.5' }));
+  assert.equal(r.status, 200);
+  const s = sessions.get((await r.json()).id);
+  assert.equal(s._params.locale, 'en');
+  assert.match(s._params.success_url, /\/en\/grazie\?session_id=/);
+  assert.match(s._params.cancel_url, /\/en\/camera-viola\?annullato=1/);
+  assert.match(s._params.line_items[0].price_data.product_data.name, /^30% deposit · Violet Room · 2 nights/);
+  assert.match(s._params.payment_intent_data.description, /Camera Viola · 2 notti/, 'descrizione Stripe in italiano per Maddalena');
+  assert.equal(s.metadata.lang, 'en');
+  const b = { id: 'AM-1', lang: 'en', roomName: 'Camera Viola', roomNameEn: 'Violet Room', checkin: '2027-05-01', checkout: '2027-05-03', nights: 2, guests: 2, total: 164, paid: 49, balance: 115, name: 'Ann', email: 'a@b.co', phone: '1234567' };
+  const g = guestEmail(b);
+  assert.equal(g.subject, "Booking confirmed · B&B L'Amicizia · 1 May 2027");
+  assert.match(g.html, /Violet Room/);
+  assert.match(g.html, /balance of <b>€ 115<\/b>/);
+  const o = ownerEmail(b);
+  assert.match(o.subject, /Nuova prenotazione dal sito · Camera Viola · 1 mag 2027/);
+  assert.match(o.html, /inglese/);
 });

@@ -22,6 +22,7 @@ export default async (req) => {
     name: m.name,
     email: s.customer_details?.email || s.customer_email,
     roomName: ROOMS[m.room]?.name,
+    roomNameEn: ROOMS[m.room]?.nameEn,
     checkin: m.checkin,
     checkout: m.checkout,
     nights: Number(m.nights),

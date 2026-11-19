@@ -1,66 +1,110 @@
 // Calendario delle date libere + prenotazione diretta con pagamento Stripe.
-// Si monta su <div data-booking [data-room="viola"]>.
+// Si monta su <div data-booking [data-room="viola"]>. Lingua presa da <html lang>.
 (function () {
   const root = document.querySelector('[data-booking]');
   if (!root) return;
 
-  const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-  const MESI_BREVI = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+  const EN = document.documentElement.lang === 'en';
+  const L = EN
+    ? {
+        months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+        short: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        dow: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+        loading: 'Loading the calendar…', unavailable: 'The calendar is not available right now.', askWa: 'Ask for dates on WhatsApp',
+        upTo: (n) => `up to ${n}`, from: 'from', perNight: '/night', prev: 'Previous month', next: 'Next month',
+        free: 'available', busy: 'booked', sel: 'your stay', guests: 'Guests', phone: 'Phone', name: 'Full name', email: 'Email',
+        emailPh: 'for your confirmation', notes: 'Notes', optional: '(optional)', notesPh: 'Arrival time, pets, breakfast requirements…',
+        payment: 'Payment', deposit: (p) => `${p}% deposit`, depositSub: 'balance on arrival', full: 'Whole stay', fullSub: 'nothing left to pay',
+        agree: `I have read the <a href="/en/condizioni" target="_blank">booking terms</a> and the <a href="/en/privacy" target="_blank">privacy policy</a>.`,
+        pickDates: 'Choose your dates', payIcons: 'Card · Apple Pay · Google Pay — secure payment by Stripe', waAsk: 'Prefer to ask first? Message us on WhatsApp',
+        cancelled: 'Payment cancelled: you have not been charged. You can try again whenever you like.',
+        hintStart: 'Choose your arrival day', hintEnd: 'Now choose your departure day', busyLabel: ', booked',
+        night: (n) => (n === 1 ? 'night' : 'nights'), guest: (n) => (n === 1 ? 'guest' : 'guests'), bf: 'breakfast included',
+        perNightFor: (p, g) => `${p} / night for ${g}`, pickHint: 'Choose arrival and departure on the calendar.',
+        minN: (n) => `Minimum ${n} nights`, payBtn: (p) => `Book and pay ${p}`, opening: 'Opening secure payment…',
+        payFail: 'We could not open the payment page. Please try again or message us on WhatsApp.',
+        waDates: (r, a, b, n, g) => `Hello Maddalena, I'd like some information about the ${r} from ${a} to ${b} (${n} nights) for ${g} guests. Thank you!`,
+        waRoom: (r) => `Hello Maddalena, I'd like some information about the ${r}. Thank you!`,
+        locale: 'en-GB', nice: (d, m) => `${d} ${m}`,
+      }
+    : {
+        months: ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'],
+        short: ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'],
+        dow: ['L', 'M', 'M', 'G', 'V', 'S', 'D'],
+        loading: 'Carico il calendario…', unavailable: 'Il calendario non è disponibile in questo momento.', askWa: 'Chiedi le date su WhatsApp',
+        upTo: (n) => `fino a ${n}`, from: 'da', perNight: '/notte', prev: 'Mese precedente', next: 'Mese successivo',
+        free: 'libera', busy: 'occupata', sel: 'il tuo soggiorno', guests: 'Ospiti', phone: 'Telefono', name: 'Nome e cognome', email: 'Email',
+        emailPh: 'per la conferma', notes: 'Note', optional: '(facoltative)', notesPh: 'Orario di arrivo, animali, esigenze per la colazione…',
+        payment: 'Pagamento', deposit: (p) => `Caparra ${p}%`, depositSub: "il resto all'arrivo", full: 'Intero soggiorno', fullSub: 'non pensi più a niente',
+        agree: `Ho letto le <a href="/condizioni" target="_blank">condizioni di prenotazione</a> e l'<a href="/privacy" target="_blank">informativa privacy</a>.`,
+        pickDates: 'Scegli le date', payIcons: 'Carta · Apple Pay · Google Pay — pagamento sicuro con Stripe', waAsk: 'Preferisci chiedere prima? Scrivici su WhatsApp',
+        cancelled: 'Pagamento annullato: nessun addebito. Potete riprovare quando volete.',
+        hintStart: 'Scegli il giorno di arrivo', hintEnd: 'Ora il giorno di partenza', busyLabel: ', occupata',
+        night: (n) => (n === 1 ? 'notte' : 'notti'), guest: (n) => (n === 1 ? 'ospite' : 'ospiti'), bf: 'colazione inclusa',
+        perNightFor: (p, g) => `${p} / notte per ${g}`, pickHint: 'Scegli arrivo e partenza sul calendario.',
+        minN: (n) => `Minimo ${n} notti`, payBtn: (p) => `Prenota e paga ${p}`, opening: 'Apro il pagamento sicuro…',
+        payFail: 'Non siamo riusciti ad aprire il pagamento. Riprovate o scriveteci su WhatsApp.',
+        waDates: (r, a, b, n, g) => `Buongiorno Maddalena, vorrei informazioni per la ${r} dal ${a} al ${b} (${n} notti) per ${g} ospiti. Grazie!`,
+        waRoom: (r) => `Buongiorno Maddalena, vorrei informazioni sulla ${r}. Grazie!`,
+        locale: 'it-IT', nice: (d, m) => `${d} ${m}`,
+      };
+
   const add = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const diff = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 864e5);
-  const nice = (s) => { const [y, m, d] = s.split('-').map(Number); return `${d} ${MESI_BREVI[m - 1]}`; };
-  const eur = (n) => '€ ' + n.toLocaleString('it-IT', { maximumFractionDigits: 2 });
+  const nice = (s) => { const [, m, d] = s.split('-').map(Number); return L.nice(d, L.short[m - 1]); };
+  const eur = (n) => '€ ' + n.toLocaleString(L.locale, { maximumFractionDigits: 2 });
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const rname = (r) => (EN ? r.nameEn : r.name);
 
   const fixedRoom = root.dataset.room || null;
   let cfg, room = fixedRoom, start = null, end = null, month, busy = new Set();
 
-  root.innerHTML = '<p class="bk-loading mono">Carico il calendario…</p>';
+  root.innerHTML = `<p class="bk-loading mono">${L.loading}</p>`;
 
   fetch('/api/availability')
     .then((r) => { if (!r.ok) throw 0; return r.json(); })
     .then((data) => { cfg = data; if (!room) room = Object.keys(cfg.rooms)[0]; month = cfg.today.slice(0, 7); build(); })
     .catch(() => {
-      root.innerHTML = `<div class="bk-error"><p>Il calendario non è disponibile in questo momento.</p>
-        <a class="btn btn-terra" href="https://wa.me/393288712971">Chiedi le date su WhatsApp</a></div>`;
+      root.innerHTML = `<div class="bk-error"><p>${L.unavailable}</p>
+        <a class="btn btn-terra" href="https://wa.me/393288712971">${L.askWa}</a></div>`;
     });
 
   function build() {
     const pct = cfg.rules.depositPercent;
     const canDeposit = pct > 0 && pct < 100;
     const roomTabs = fixedRoom ? '' : `<div class="bk-rooms" role="tablist">${Object.entries(cfg.rooms)
-      .map(([id, r]) => `<button type="button" role="tab" data-r="${id}">${esc(r.name)}<small>fino a ${r.maxGuests} · ${eur(r.pricePerNight)}/notte</small></button>`).join('')}</div>`;
+      .map(([id, r]) => `<button type="button" role="tab" data-r="${id}">${esc(rname(r))}<small>${L.upTo(r.maxGuests)} · ${L.from} ${eur(r.pricePerNight)}${L.perNight}</small></button>`).join('')}</div>`;
 
     root.innerHTML = `
       ${roomTabs}
       <div class="bk-grid">
         <div class="cal">
           <div class="cal-nav">
-            <button type="button" class="cal-prev" aria-label="Mese precedente">‹</button>
+            <button type="button" class="cal-prev" aria-label="${L.prev}">‹</button>
             <p class="mono cal-hint"></p>
-            <button type="button" class="cal-next" aria-label="Mese successivo">›</button>
+            <button type="button" class="cal-next" aria-label="${L.next}">›</button>
           </div>
           <div class="cal-months"></div>
-          <p class="cal-legend mono"><span class="lg free"></span>libera <span class="lg busy"></span>occupata <span class="lg sel"></span>il tuo soggiorno</p>
+          <p class="cal-legend mono"><span class="lg free"></span>${L.free} <span class="lg busy"></span>${L.busy} <span class="lg sel"></span>${L.sel}</p>
         </div>
         <form class="form bk-form" novalidate>
           <div class="bk-sum"></div>
           <div class="row2">
-            <label>Ospiti<select name="guests"></select></label>
-            <label>Telefono<input name="phone" type="tel" autocomplete="tel" required placeholder="+39 …"></label>
+            <label>${L.guests}<select name="guests"></select></label>
+            <label>${L.phone}<input name="phone" type="tel" autocomplete="tel" required placeholder="+39 …"></label>
           </div>
-          <label>Nome e cognome<input name="name" autocomplete="name" required></label>
-          <label>Email<input name="email" type="email" autocomplete="email" required placeholder="per la conferma"></label>
-          <label><span>Note <span class="opt">(facoltative)</span></span><textarea name="notes" rows="2" maxlength="450" placeholder="Orario di arrivo, animali, esigenze per la colazione…"></textarea></label>
-          ${canDeposit ? `<fieldset class="bk-pay"><legend class="mono">Pagamento</legend>
-            <label class="radio"><input type="radio" name="payment" value="deposit" checked><span>Caparra ${pct}% <b class="pay-dep"></b><small>il resto all'arrivo</small></span></label>
-            <label class="radio"><input type="radio" name="payment" value="full"><span>Intero soggiorno <b class="pay-full"></b><small>non pensi più a niente</small></span></label>
+          <label>${L.name}<input name="name" autocomplete="name" required></label>
+          <label>${L.email}<input name="email" type="email" autocomplete="email" required placeholder="${L.emailPh}"></label>
+          <label><span>${L.notes} <span class="opt">${L.optional}</span></span><textarea name="notes" rows="2" maxlength="450" placeholder="${L.notesPh}"></textarea></label>
+          ${canDeposit ? `<fieldset class="bk-pay"><legend class="mono">${L.payment}</legend>
+            <label class="radio"><input type="radio" name="payment" value="deposit" checked><span>${L.deposit(pct)} <b class="pay-dep"></b><small>${L.depositSub}</small></span></label>
+            <label class="radio"><input type="radio" name="payment" value="full"><span>${L.full} <b class="pay-full"></b><small>${L.fullSub}</small></span></label>
           </fieldset>` : ''}
-          <label class="check"><input type="checkbox" name="ok" required><span>Ho letto le <a href="/condizioni" target="_blank">condizioni di prenotazione</a> e l'<a href="/privacy" target="_blank">informativa privacy</a>.</span></label>
+          <label class="check"><input type="checkbox" name="ok" required><span>${L.agree}</span></label>
           <p class="bk-err" role="alert" hidden></p>
-          <button class="btn btn-terra full bk-submit" type="submit" disabled>Scegli le date</button>
-          <p class="mono tiny pay-icons">Carta · Apple Pay · Google Pay — pagamento sicuro con Stripe</p>
-          <a class="btn btn-ghost full bk-wa" target="_blank" rel="noopener">Preferisci chiedere prima? Scrivici su WhatsApp</a>
+          <button class="btn btn-terra full bk-submit" type="submit" disabled>${L.pickDates}</button>
+          <p class="mono tiny pay-icons">${L.payIcons}</p>
+          <a class="btn btn-ghost full bk-wa" target="_blank" rel="noopener">${L.waAsk}</a>
         </form>
       </div>`;
 
@@ -72,7 +116,7 @@
     root.querySelector('.bk-form').addEventListener('change', summary);
 
     const qs = new URLSearchParams(location.search);
-    if (qs.get('annullato')) showErr('Pagamento annullato: nessun addebito. Potete riprovare quando volete.');
+    if (qs.get('annullato')) showErr(L.cancelled);
     setRoom(room);
     window.addEventListener('resize', debounce(renderCal, 150));
   }
@@ -123,10 +167,9 @@
     for (let i = 0; i < n; i++) {
       const ym = addMonth(month, i);
       const [y, m] = ym.split('-').map(Number);
-      const first = `${ym}-01`;
-      const lead = (new Date(first + 'T00:00:00Z').getUTCDay() + 6) % 7; // lunedì = 0
+      const lead = (new Date(`${ym}-01T00:00:00Z`).getUTCDay() + 6) % 7; // lunedì = 0
       const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
-      html += `<div class="cal-month"><h4>${MESI[m - 1]} ${y}</h4><div class="cal-days mono"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span>`;
+      html += `<div class="cal-month"><h4>${L.months[m - 1]} ${y}</h4><div class="cal-days mono">${L.dow.map((x) => `<span>${x}</span>`).join('')}`;
       html += '<i></i>'.repeat(lead);
       for (let day = 1; day <= days; day++) {
         const d = `${ym}-${String(day).padStart(2, '0')}`;
@@ -140,7 +183,7 @@
         if (start && end && d > start && d < end) cls.push('in');
         const ok = !past && (!isBusy || canCheckout(d));
         if (start && !end && d > start && !canCheckout(d)) cls.push('off');
-        html += `<button type="button" data-d="${d}" class="${cls.join(' ')}"${ok ? '' : ' disabled'} aria-label="${day} ${MESI[m - 1]}${isBusy ? ', occupata' : ''}">${day}</button>`;
+        html += `<button type="button" data-d="${d}" class="${cls.join(' ')}"${ok ? '' : ' disabled'} aria-label="${day} ${L.months[m - 1]}${isBusy ? L.busyLabel : ''}">${day}</button>`;
       }
       html += '</div></div>';
     }
@@ -148,8 +191,10 @@
     wrap.style.setProperty('--n', n);
     root.querySelector('.cal-prev').disabled = month <= cfg.today.slice(0, 7);
     root.querySelector('.cal-next').disabled = addMonth(month, n - 1) >= lastMonth();
-    root.querySelector('.cal-hint').textContent = !start ? 'Scegli il giorno di arrivo' : !end ? 'Ora il giorno di partenza' : `${nice(start)} → ${nice(end)}`;
+    root.querySelector('.cal-hint').textContent = !start ? L.hintStart : !end ? L.hintEnd : `${nice(start)} → ${nice(end)}`;
   }
+
+  const val = (f, n) => f.elements.namedItem(n).value;
 
   function summary() {
     const r = cfg.rooms[room];
@@ -157,16 +202,19 @@
     const btn = f.querySelector('.bk-submit');
     const sum = f.querySelector('.bk-sum');
     const nights = start && end ? diff(start, end) : 0;
-    const total = nights * r.pricePerNight;
+    const guests = Number(val(f, 'guests')) || 1;
+    const perNight = r.prices[guests];
+    const total = nights * perNight;
     const pct = cfg.rules.depositPercent;
     const dep = Math.round((total * pct) / 100);
     const tooShort = nights && nights < cfg.rules.minNights;
+    const g = `${guests} ${L.guest(guests)}`;
 
     sum.innerHTML = nights
-      ? `<p class="mono kicker">${esc(r.name)}</p>
-         <p class="bk-dates"><b>${nice(start)}</b> → <b>${nice(end)}</b> <span>${nights} ${nights === 1 ? 'notte' : 'notti'}</span></p>
-         <p class="bk-total">${nights} × ${eur(r.pricePerNight)} = <b>${eur(total)}</b> <small>colazione inclusa</small></p>`
-      : `<p class="mono kicker">${esc(r.name)} · ${eur(r.pricePerNight)} / notte</p><p class="bk-dates muted">Scegli arrivo e partenza sul calendario.</p>`;
+      ? `<p class="mono kicker">${esc(rname(r))}</p>
+         <p class="bk-dates"><b>${nice(start)}</b> → <b>${nice(end)}</b> <span>${nights} ${L.night(nights)}</span></p>
+         <p class="bk-total">${nights} × ${eur(perNight)} (${g}) = <b>${eur(total)}</b> <small>${L.bf}</small></p>`
+      : `<p class="mono kicker">${esc(rname(r))} · ${L.perNightFor(eur(perNight), g)}</p><p class="bk-dates muted">${L.pickHint}</p>`;
 
     const d = f.querySelector('.pay-dep'), fu = f.querySelector('.pay-full');
     if (d) d.textContent = nights ? eur(dep) : '';
@@ -174,15 +222,12 @@
 
     const payment = f.querySelector('[name=payment]:checked')?.value || 'full';
     btn.disabled = !nights || tooShort;
-    btn.textContent = !nights ? 'Scegli le date' : tooShort ? `Minimo ${cfg.rules.minNights} notti` : `Prenota e paga ${eur(payment === 'deposit' ? dep : total)}`;
+    btn.textContent = !nights ? L.pickDates : tooShort ? L.minN(cfg.rules.minNights) : L.payBtn(eur(payment === 'deposit' ? dep : total));
 
-    const msg = nights
-      ? `Buongiorno Maddalena, vorrei informazioni per la ${r.name} dal ${nice(start)} al ${nice(end)} (${nights} notti) per ${val(f, "guests")} ospiti. Grazie!`
-      : `Buongiorno Maddalena, vorrei informazioni sulla ${r.name}. Grazie!`;
+    const msg = nights ? L.waDates(rname(r), nice(start), nice(end), nights, guests) : L.waRoom(rname(r));
     f.querySelector('.bk-wa').href = `https://wa.me/${cfg.property.whatsapp}?text=${encodeURIComponent(msg)}`;
   }
 
-  const val = (f, n) => f.elements.namedItem(n).value;
   function showErr(t) { const e = root.querySelector('.bk-err'); e.textContent = t; e.hidden = !t; }
 
   async function submit(e) {
@@ -193,7 +238,7 @@
     const btn = f.querySelector('.bk-submit');
     const label = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Apro il pagamento sicuro…';
+    btn.textContent = L.opening;
     let prev = null;
     try { prev = sessionStorage.getItem('bk-session'); } catch {}
     try {
@@ -201,8 +246,8 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          room, checkin: start, checkout: end,
-          guests: Number(val(f, "guests")), name: val(f, "name"), email: val(f, "email"), phone: val(f, "phone"), notes: val(f, "notes"),
+          room, checkin: start, checkout: end, lang: EN ? 'en' : 'it',
+          guests: Number(val(f, 'guests')), name: val(f, 'name'), email: val(f, 'email'), phone: val(f, 'phone'), notes: val(f, 'notes'),
           payment: f.querySelector('[name=payment]:checked')?.value || 'full',
           replaceSession: prev,
         }),
@@ -210,7 +255,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.url) {
         if (res.status === 409) refresh();
-        throw new Error(data.error || 'Non siamo riusciti ad aprire il pagamento. Riprovate o scriveteci su WhatsApp.');
+        throw new Error(data.error || L.payFail);
       }
       try { sessionStorage.setItem('bk-session', data.id); } catch {}
       location.href = data.url;

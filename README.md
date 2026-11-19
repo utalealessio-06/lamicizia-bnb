@@ -3,8 +3,15 @@
 Sito statico in `docs/` + funzioni Netlify in `netlify/functions/` (prenotazioni, pagamenti, recensioni).
 
 ## Pagine
-- `/` home · `/camera-viola` `/camera-verde` `/camera-classica` · `/dintorni` · `/condizioni`
-- `/grazie` conferma dopo il pagamento · `/admin` pannello riservato di Maddalena
+- `/` home · `/camera-viola` `/camera-verde` `/camera-classica` · `/dintorni` · `/condizioni` · `/privacy`
+- `/grazie` conferma dopo il pagamento · `/admin` pannello riservato di Maddalena (solo italiano)
+- Versione inglese sotto `/en/` con le stesse pagine; selettore IT/EN nell'intestazione.
+
+Le pagine camere, dintorni, condizioni, privacy e grazie (IT + EN) si generano con
+`node scripts/pages.mjs`: i testi si modificano lì, non negli HTML. Le due home
+(`docs/index.html`, `docs/en/index.html`) sono scritte a mano.
+Gli script del sito (`docs/js/`) scelgono la lingua da `<html lang>`; la lingua della
+prenotazione arriva fino a Stripe e all'email dell'ospite (quella a Maddalena resta in italiano).
 
 ## Come funziona la prenotazione
 1. L'ospite sceglie camera e date sul calendario (`/api/availability`).
@@ -18,7 +25,7 @@ Calendario e prenotazioni stanno su Netlify Blobs. Niente collegamento con Booki
 le date vendute altrove si bloccano a mano da `/admin`.
 
 ## Da modificare
-- Prezzi e capienza: `netlify/lib/config.js` (ora sono **segnaposto**).
+- Prezzi per numero di ospiti e capienza: `netlify/lib/config.js` (1–2 ospiti da Booking; 3°–4° ospite **segnaposto**).
 - Testi delle condizioni: `docs/condizioni.html` (parti evidenziate in giallo).
 
 ## Messa online

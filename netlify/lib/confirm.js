@@ -22,6 +22,8 @@ export async function confirmSession(session) {
     status: 'confermata',
     room: m.room,
     roomName: ROOMS[m.room].name,
+    roomNameEn: ROOMS[m.room].nameEn,
+    lang: m.lang === 'en' ? 'en' : 'it',
     checkin: m.checkin,
     checkout: m.checkout,
     nights: Number(m.nights),
