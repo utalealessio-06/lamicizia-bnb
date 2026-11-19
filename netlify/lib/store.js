@@ -23,6 +23,16 @@ export function isBusy(entry, now = Date.now()) {
   return true;
 }
 
+// Numero di pagamenti in corso (blocchi temporanei ancora attivi) su tutte le camere.
+export async function activeHolds(now = Date.now()) {
+  const ids = new Set();
+  for (const id of Object.keys(ROOMS)) {
+    const c = await getCalendar(id);
+    for (const e of Object.values(c)) if (e.t === 'hold' && e.until > now) ids.add(e.id);
+  }
+  return ids.size;
+}
+
 // Notti non disponibili per il pubblico (prenotate, bloccate o in pagamento).
 export async function busyNights(roomId, from) {
   const c = await getCalendar(roomId);

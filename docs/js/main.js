@@ -26,7 +26,8 @@ if (revBox) {
     if (!g.reviews?.length) return;
     revBox.innerHTML = g.reviews.map((r) => {
       const who = r.authorUrl ? `<a href="${escHtml(r.authorUrl)}" target="_blank" rel="noopener">${escHtml(r.author)}</a>` : escHtml(r.author);
-      const pic = r.photo ? `<img src="${escHtml(r.photo)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="ini">${escHtml((r.author || '?')[0])}</span>`;
+      // Niente foto profilo: verrebbero caricate dai server di Google senza consenso.
+      const pic = `<span class="ini">${escHtml((r.author || '?')[0])}</span>`;
       return `<article class="review">
         <header>${pic}<div><h3>${who}</h3><time>${escHtml(r.when || '')}</time></div></header>
         <span class="stars" aria-label="${r.rating} stelle su 5">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
@@ -45,3 +46,23 @@ if (revBox) {
     document.getElementById('reviews-fallback').hidden = true;
   }).catch(() => {});
 }
+
+// Mappa Google: si carica solo dopo il consenso (niente cookie di Google prima del clic)
+document.querySelectorAll('[data-map]').forEach((box) => {
+  const KEY = 'map-ok';
+  const show = () => {
+    const f = document.createElement('iframe');
+    f.title = "Mappa del B&B L'Amicizia";
+    f.loading = 'lazy';
+    f.referrerPolicy = 'no-referrer-when-downgrade';
+    f.src = box.dataset.map;
+    box.replaceChildren(f);
+  };
+  let remembered = false;
+  try { remembered = localStorage.getItem(KEY) === '1'; } catch {}
+  if (remembered) return show();
+  box.querySelector('button').addEventListener('click', () => {
+    if (box.querySelector('input[type=checkbox]').checked) { try { localStorage.setItem(KEY, '1'); } catch {} }
+    show();
+  });
+});

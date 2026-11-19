@@ -30,3 +30,14 @@ le date vendute altrove si bloccano a mano da `/admin`.
 
 ## Test
 `npm install && npm test` (Stripe e Blobs simulati).
+
+## Sicurezza e privacy
+- Pagamenti solo su Stripe Checkout: i dati delle carte non passano dal sito. Importi calcolati sul server.
+- Webhook Stripe verificato con firma (`STRIPE_WEBHOOK_SECRET`).
+- `/api/checkout`: max 5 tentativi l'ora per IP e max 8 pagamenti in corso in tutto il sito
+  (contro chi blocca il calendario per dispetto).
+- `/admin`: dopo 5 password errate blocco di 15 minuti per IP; oltre 30 errori/ora blocco totale per 1 ora.
+  Gli IP sono salvati solo come hash.
+- Intestazioni di sicurezza e CSP in `netlify.toml`.
+- Mappa Google caricata solo dopo il consenso; recensioni senza foto profilo da Google.
+- `docs/privacy.html` è una **bozza** da far verificare (parti in giallo).

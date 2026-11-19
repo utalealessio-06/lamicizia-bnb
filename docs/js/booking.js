@@ -56,7 +56,7 @@
             <label class="radio"><input type="radio" name="payment" value="deposit" checked><span>Caparra ${pct}% <b class="pay-dep"></b><small>il resto all'arrivo</small></span></label>
             <label class="radio"><input type="radio" name="payment" value="full"><span>Intero soggiorno <b class="pay-full"></b><small>non pensi più a niente</small></span></label>
           </fieldset>` : ''}
-          <label class="check"><input type="checkbox" name="ok" required><span>Ho letto le <a href="/condizioni" target="_blank">condizioni di prenotazione</a>.</span></label>
+          <label class="check"><input type="checkbox" name="ok" required><span>Ho letto le <a href="/condizioni" target="_blank">condizioni di prenotazione</a> e l'<a href="/privacy" target="_blank">informativa privacy</a>.</span></label>
           <p class="bk-err" role="alert" hidden></p>
           <button class="btn btn-terra full bk-submit" type="submit" disabled>Scegli le date</button>
           <p class="mono tiny pay-icons">Carta · Apple Pay · Google Pay — pagamento sicuro con Stripe</p>

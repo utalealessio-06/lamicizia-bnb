@@ -2,13 +2,21 @@
 // Carta, Apple Pay e Google Pay sono offerti da Stripe Checkout (metodi attivi nel pannello Stripe).
 import { ROOMS, RULES, PROPERTY, quote } from '../lib/config.js';
 import { todayRome, itDate } from '../lib/dates.js';
-import { rangeIsFree, markNights, releaseById } from '../lib/store.js';
+import { rangeIsFree, markNights, releaseById, activeHolds } from '../lib/store.js';
+import { clientId, check, record } from '../lib/ratelimit.js';
 import { validateBooking } from '../lib/validate.js';
 import { stripe } from '../lib/stripe.js';
 import { json, fail } from '../lib/http.js';
 
-export default async (req) => {
+// Contro chi avvia pagamenti a vuoto per bloccare il calendario:
+// massimo 5 tentativi l'ora per indirizzo e massimo 8 pagamenti in corso in tutto il sito.
+const IP_LIMIT = 5, IP_WINDOW = 60 * 60e3, MAX_ACTIVE_HOLDS = 8;
+const busyMsg = 'Troppe richieste in questo momento. Riprovate tra qualche minuto o scriveteci su WhatsApp al 328 871 2971.';
+
+export default async (req, context) => {
   if (req.method !== 'POST') return fail('Metodo non consentito', 405);
+  const ipKey = `checkout/${clientId(req, context)}`;
+  if (!(await check(ipKey, IP_LIMIT, IP_WINDOW)).ok) return fail(busyMsg, 429);
   let body;
   try {
     body = await req.json();
@@ -32,6 +40,8 @@ export default async (req) => {
 
   if (!(await rangeIsFree(b.room, b.checkin, b.checkout)))
     return fail('Alcune di queste notti sono appena state prenotate. Scegliete altre date.', 409);
+  if ((await activeHolds()) >= MAX_ACTIVE_HOLDS) return fail(busyMsg, 429);
+  await record(ipKey, IP_WINDOW);
 
   const room = ROOMS[b.room];
   const q = quote(b.room, b.nights, b.payment);

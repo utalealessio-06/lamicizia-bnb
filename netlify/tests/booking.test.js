@@ -112,3 +112,22 @@ test('pannello: password, blocco e sblocco', async () => {
   await adm({ action: 'unblock', room: 'classica', dates: d });
   assert.deepEqual(await busy('classica'), nightsOf(addDays(d[0], -2), d[0]));
 });
+
+test('limiti: troppi pagamenti avviati e tetto globale', async () => {
+  const from = (ip, n) => checkout(post('/api/checkout', { ...guest, room: 'classica', checkin: addDays(today, 100 + n * 3), checkout: addDays(today, 101 + n * 3) }, { 'x-nf-client-connection-ip': ip }));
+  for (let i = 0; i < 5; i++) assert.equal((await from('1.1.1.1', i)).status, 200, `tentativo ${i + 1}`);
+  assert.equal((await from('1.1.1.1', 5)).status, 429, 'sesto tentativo dallo stesso IP bloccato');
+  // altri indirizzi: si arriva al tetto di 8 pagamenti in corso in tutto il sito
+  let last;
+  for (let i = 0; i < 4; i++) last = await from('2.2.2.' + i, 10 + i);
+  assert.equal(last.status, 429, 'tetto globale raggiunto');
+});
+
+test('limiti: password del pannello', async () => {
+  const h = { 'x-nf-client-connection-ip': '9.9.9.9' };
+  for (let i = 0; i < 5; i++) assert.equal((await admin(post('/api/admin', { action: 'overview' }, { ...h, 'x-admin-password': 'no' }))).status, 401);
+  // dopo 5 errori è bloccato anche con la password giusta
+  assert.equal((await admin(post('/api/admin', { action: 'overview' }, { ...h, 'x-admin-password': 'password-lunga' }))).status, 429);
+  // da un altro indirizzo si entra
+  assert.equal((await admin(post('/api/admin', { action: 'overview' }, { 'x-nf-client-connection-ip': '8.8.8.8', 'x-admin-password': 'password-lunga' }))).status, 200);
+});
