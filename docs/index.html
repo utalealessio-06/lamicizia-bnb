@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>B&amp;B L'Amicizia · Montefiascone, nel cuore della Tuscia</title>
-<meta name="description" content="B&B L'Amicizia a Montefiascone (VT): tre camere con bagno privato, piscina, giardino e colazione fatta in casa. Prenota direttamente su WhatsApp.">
+<meta name="description" content="B&B L'Amicizia a Montefiascone (VT): tre camere con bagno privato, piscina, giardino e colazione fatta in casa. Vedi le date libere e prenota direttamente sul sito.">
+<link rel="icon" href="img/logo-ink.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -18,8 +19,8 @@
     <nav class="nav" id="nav">
       <a href="#camere">Camere</a>
       <a href="#colazione">Colazione</a>
-      <a href="#dintorni">Dintorni</a>
-      <a href="#ospiti">Ospiti</a>
+      <a href="dintorni">Dintorni</a>
+      <a href="#ospiti">Recensioni</a>
     </nav>
     <a class="btn btn-terra small" href="#prenota">Prenota</a>
     <button class="burger" aria-label="Menu" aria-expanded="false"><span></span></button>
@@ -29,7 +30,7 @@
 <section class="hero">
   <img class="hero-img" src="img/piscina-vista.jpg" alt="La piscina del B&B L'Amicizia con vista sulla campagna della Tuscia">
   <div class="hero-shade"></div>
-  <div class="rating"><b>4,7</b><span>★★★★★</span><small>188 recensioni su Google</small></div>
+  <div class="rating"><b data-g="rating">4,7</b><span>★★★★★</span><small><span data-g="count">188</span> recensioni su Google</small></div>
   <div class="wrap hero-in">
     <div class="postcard">
       <img src="img/logo-ink.png" alt="Logo B&B L'Amicizia" class="postmark">
@@ -66,38 +67,41 @@
       <p>Tutte con bagno privato e colazione inclusa. Si sceglie in base a quanti siete: da due a quattro ospiti.</p>
     </div>
     <div class="room-grid">
-      <article class="polaroid tilt-l">
+      <a class="polaroid tilt-l" href="camera-viola">
         <span class="tape"></span>
         <img src="img/camera-viola.jpg" alt="Camera Viola">
         <div class="cap">
           <h3>Camera Viola</h3>
           <p class="mono">Fino a 2 ospiti</p>
           <ul><li>Bagno privato</li><li>Colazione inclusa</li></ul>
-          <div class="price"><span class="mono">da</span> € — <span class="mono">/ notte</span></div>
+          <div class="price"><span class="mono">da</span> <span data-price="viola">€ —</span> <span class="mono">/ notte</span></div>
+          <span class="link mono more">Vedi la camera e le date →</span>
         </div>
-      </article>
-      <article class="polaroid">
+      </a>
+      <a class="polaroid" href="camera-verde">
         <span class="tape"></span>
         <img src="img/camera-verde.jpg" alt="Camera Verde">
         <div class="cap">
           <h3>Camera Verde</h3>
           <p class="mono">Fino a 3 ospiti</p>
           <ul><li>Bagno privato</li><li>Colazione inclusa</li></ul>
-          <div class="price"><span class="mono">da</span> € — <span class="mono">/ notte</span></div>
+          <div class="price"><span class="mono">da</span> <span data-price="verde">€ —</span> <span class="mono">/ notte</span></div>
+          <span class="link mono more">Vedi la camera e le date →</span>
         </div>
-      </article>
-      <article class="polaroid tilt-r">
+      </a>
+      <a class="polaroid tilt-r" href="camera-classica">
         <span class="tape"></span>
         <img src="img/camera-classica.jpg" alt="Camera Classica">
         <div class="cap">
           <h3>Camera Classica</h3>
           <p class="mono">Fino a 4 ospiti</p>
           <ul><li>Bagno privato</li><li>Colazione inclusa</li></ul>
-          <div class="price"><span class="mono">da</span> € — <span class="mono">/ notte</span></div>
+          <div class="price"><span class="mono">da</span> <span data-price="classica">€ —</span> <span class="mono">/ notte</span></div>
+          <span class="link mono more">Vedi la camera e le date →</span>
         </div>
-      </article>
+      </a>
     </div>
-    <p class="mono note">Cancellazione gratuita · prezzi e disponibilità aggiornati da voi</p>
+    <p class="mono note">Prenotazione diretta sul sito · nessuna commissione · <a class="link" href="condizioni">condizioni</a></p>
   </div>
 </section>
 
@@ -163,6 +167,7 @@
         <li><b>84 km</b> Aeroporto di Fiumicino</li>
       </ul>
     </div>
+    <p style="margin-top:44px"><a class="btn btn-terra" href="dintorni">Mappa, come arrivare e cosa vedere →</a></p>
   </div>
 </section>
 
@@ -170,62 +175,49 @@
   <div class="wrap">
     <div class="sec-head">
       <p class="mono kicker">N° 05 · Dicono di noi</p>
-      <h2><em>4,7 su 5</em> con 188 recensioni.</h2>
-      <p>Cosa raccontano più spesso gli ospiti nelle recensioni su Google.</p>
+      <h2><em><span data-g="rating">4,7</span> su 5</em> con <span data-g="count">188</span> recensioni.</h2>
+      <p>Le recensioni degli ospiti, così come le hanno scritte su Google.</p>
     </div>
-    <div class="notes">
+    <div class="reviews" id="reviews" hidden></div>
+    <div class="notes" id="reviews-fallback">
       <div class="note-card"><span class="mono">01</span><h3>La padrona di casa</h3><p>Gentile e disponibile: tanti ospiti scrivono di essersi sentiti a casa.</p></div>
       <div class="note-card"><span class="mono">02</span><h3>La colazione</h3><p>Varia e abbondante, con i dolci fatti in casa, servita in terrazza.</p></div>
       <div class="note-card"><span class="mono">03</span><h3>Giardino e piscina</h3><p>Un grande giardino e la piscina con la vista sulla campagna.</p></div>
       <div class="note-card"><span class="mono">04</span><h3>Pulizia e animali</h3><p>Camere curate e pulite ogni giorno, e i cani sono i benvenuti.</p></div>
     </div>
-    <p class="mono note">Sintesi delle recensioni pubbliche su Google</p>
+    <div class="g-foot">
+      <span class="mono tiny">Recensioni da Google</span>
+      <a class="btn btn-ghost small" id="g-link" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query=B%26B+L%27Amicizia+Via+Cassia+Vecchia+100+Montefiascone">Leggile tutte su Google →</a>
+    </div>
   </div>
 </section>
 
 <section class="book" id="prenota">
-  <div class="wrap book-grid">
-    <form class="form" id="bookform">
-      <p class="mono kicker">Prenota direttamente</p>
-      <h2>Scrivici le date, <em>ti rispondiamo su WhatsApp.</em></h2>
-      <div class="row2">
-        <label>Arrivo<input type="text" id="f-in" placeholder="es. 12 aprile"></label>
-        <label>Partenza<input type="text" id="f-out" placeholder="es. 14 aprile"></label>
-      </div>
-      <div class="row2">
-        <label>Ospiti
-          <select id="f-guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
-        </label>
-        <label>Camera
-          <select id="f-room"><option>Nessuna preferenza</option><option>Camera Viola</option><option>Camera Verde</option><option>Camera Classica</option></select>
-        </label>
-      </div>
-      <label>Nome<input type="text" id="f-name" placeholder="Il tuo nome"></label>
-      <button class="btn btn-terra full" type="submit">Invia la richiesta su WhatsApp</button>
-      <p class="mono tiny">Nessuna commissione: la prenotazione arriva direttamente a noi.</p>
-    </form>
-    <div class="ticket">
-      <img src="img/logo-ink.png" alt="" class="ticket-logo">
-      <dl>
-        <div><dt class="mono">Indirizzo</dt><dd>Via Cassia Vecchia, 100<br>01027 Montefiascone (VT)</dd></div>
-        <div><dt class="mono">Telefono e WhatsApp</dt><dd>328 871 2971</dd></div>
-        <div><dt class="mono">Email</dt><dd>—</dd></div>
-        <div><dt class="mono">Arrivo / partenza</dt><dd>12:00 – 20:00 / entro le 10:30</dd></div>
-        <div><dt class="mono">Vi accoglie</dt><dd>Maddalena</dd></div>
-      </dl>
+  <div class="wrap book-full">
+    <div class="sec-head">
+      <p class="mono kicker">N° 06 · Prenota direttamente</p>
+      <h2>Scegli la camera, <em>guarda le date libere.</em></h2>
+      <p>Prenoti e paghi qui sul sito, senza commissioni: la conferma ti arriva subito via email. Se preferisci, chiedi prima a noi.</p>
     </div>
+    <div data-booking></div>
+    <p class="book-contacts">
+      <span><b>Telefono e WhatsApp</b>328 871 2971</span>
+      <span><b>Indirizzo</b>Via Cassia Vecchia, 100 · Montefiascone (VT)</span>
+      <span><b>Vi accoglie</b>Maddalena</span>
+    </p>
   </div>
 </section>
 
 <footer class="foot">
   <div class="wrap foot-row">
     <span class="brand small"><img src="img/logo-ink.png" alt="" class="stamp-sm"><span>B&amp;B <em>L'Amicizia</em> · dal 2014</span></span>
-    <span class="mono">CIN IT056036C16TV8HPD4 · CIR 056036-B&amp;B-00006</span>
+    <span class="mono"><a href="condizioni">Condizioni di prenotazione</a> · CIN IT056036C16TV8HPD4 · CIR 056036-B&amp;B-00006</span>
   </div>
 </footer>
 
 <a class="wa-float" href="https://wa.me/393288712971" aria-label="Scrivi su WhatsApp"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.6-.3z"/></svg></a>
 
 <script src="js/main.js"></script>
+<script src="js/booking.js"></script>
 </body>
 </html>

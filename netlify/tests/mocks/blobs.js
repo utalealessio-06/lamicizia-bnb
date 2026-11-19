@@ -1,0 +1,14 @@
+// Netlify Blobs in memoria, per i test.
+const stores = new Map();
+export function getStore(opts) {
+  const name = typeof opts === 'string' ? opts : opts.name;
+  if (!stores.has(name)) stores.set(name, new Map());
+  const m = stores.get(name);
+  return {
+    async get(k, o) { const v = m.get(k); return v === undefined ? null : o?.type === 'json' ? JSON.parse(v) : v; },
+    async set(k, v) { m.set(k, String(v)); },
+    async setJSON(k, v) { m.set(k, JSON.stringify(v)); },
+    async list() { return { blobs: [...m.keys()].map((key) => ({ key })) }; },
+  };
+}
+export const __reset = () => stores.clear();

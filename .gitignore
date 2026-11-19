@@ -1,1 +1,4 @@
 /MOCKUP
+node_modules/
+.netlify/
+.env

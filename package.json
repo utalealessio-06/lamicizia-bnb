@@ -1,0 +1,13 @@
+{
+  "name": "lamicizia-bnb",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "test": "node --test netlify/tests/*.test.js"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "stripe": "^17.4.0"
+  }
+}
